@@ -1,0 +1,17 @@
+{
+  "name": "kyu.heyimkyu.animatoreditor",
+  "displayName": "kyu.heyimkyu.animatoreditor",
+  "version": "0.0.1",
+  "description": "Describe this Package",
+  "dependencies": {},
+  "gitDependencies": {},
+  "vpmDependencies": {},
+  "author": {
+    "name": "HeyImKyu",
+    "email": "3ad4gum@gmail.com",
+    "url": ""
+  },
+  "legacyFolders": {},
+  "legacyFiles": {},
+  "localPath": "N:\\AvatarProjects\\AnimatorEditor\\Packages\\kyu.heyimkyu.animatoreditor"
+}
