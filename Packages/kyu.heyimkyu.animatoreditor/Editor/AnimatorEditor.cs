@@ -45,6 +45,9 @@ public class AnimatorEditor : UnityEditor.EditorWindow
     public int numOfFlipAnimations { get; set; }
     public List<AnimationClip> animationsToFlip { get; set; } = new List<AnimationClip>();
 
+    // ---- state machine ----
+    public bool stateMachineShifter { get; set; }
+
     private void OnGUI()
     {
         var labelOptions = new GUILayoutOption[]
@@ -198,6 +201,20 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             }
         }
         #endregion FlipAnimations
+
+        #region FixStateMachine
+
+        stateMachineShifter = EditorGUILayout.Foldout(stateMachineShifter, "Fix Layer Machine State");
+        if (stateMachineShifter)
+        {
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Fix Machine States"))
+            {
+                FixMachineStates();
+            }
+        }
+
+        #endregion
 
         EditorGUILayout.EndScrollView();
 
@@ -376,5 +393,25 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             AssetDatabase.Refresh();
             clip.frameRate = anim.frameRate;
         }
+
+    }
+
+    void FixMachineStates()
+    {
+        foreach (var layer in animatorController.layers)
+        {
+            layer.stateMachine = new AnimatorStateMachine();
+            layer.stateMachine.name = layer.name;
+            layer.stateMachine.hideFlags = HideFlags.HideInHierarchy;
+
+            var path = AssetDatabase.GetAssetPath(animatorController);
+
+            UnityEngine.Debug.Log("Path: " + path);
+
+            if (path != "")
+                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
+        }
+
+        UnityEngine.Debug.Log("Fixed oder so");
     }
 }
