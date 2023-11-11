@@ -1,7 +1,7 @@
 {
   "name": "kyu.heyimkyu.animatoreditor",
   "displayName": "AnimatorEditor",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Package to manage Animator Controllers and Animations more easily.",
   "gitDependencies": {},
   "vpmDependencies": {},

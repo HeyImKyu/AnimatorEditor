@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -12,14 +11,16 @@ public class AnimatorEditor : UnityEditor.EditorWindow
         GetWindow<AnimatorEditor>("Animator Editor");
     }
 
-    // ---- bool ----
     public Vector2 scrollPosition { get; set; }
 
     public AnimatorController animatorController { get; set; }
     public GameObject gameobject { get; set; }
-    public Motion animationOn { get; set; }
-    public Motion animationOff { get; set; }
     public string layerName { get; set; }
+
+    // ---- bool ----
+    public Motion animationOn { get; set; }
+
+    public Motion animationOff { get; set; }
     public string onTransitionParam { get; set; }
     public string offTransitionParam { get; set; }
     public bool onTransitionBool { get; set; }
@@ -42,21 +43,56 @@ public class AnimatorEditor : UnityEditor.EditorWindow
 
     // ---- flip ----
     public bool showAnimationFlipper { get; set; }
+
     public int numOfFlipAnimations { get; set; }
     public List<AnimationClip> animationsToFlip { get; set; } = new List<AnimationClip>();
 
-    // ---- state machine ----
-    public bool stateMachineShifter { get; set; }
+    // ---- automatic stuff ----
+    public bool automaticNaming { get; set; } = true;
+
+    public bool automaticSearchingForOnAnim { get; set; } = true;
+
+    private static GUILayoutOption[] labelOptions = new GUILayoutOption[]
+    {
+        GUILayout.ExpandWidth(false),
+        GUILayout.MaxWidth(13)
+    };
+
+    private static char upArrow = '\u25B2';
+    private static char downArrow = '\u25BC';
 
     private void OnGUI()
     {
-        var labelOptions = new GUILayoutOption[]
-             {
-             GUILayout.ExpandWidth(false),
-             GUILayout.MaxWidth(13)
-             };
-        char upArrow = '\u25B2';
-        char downArrow = '\u25BC';
+        #region Automatic Stuff
+
+        if (automaticNaming)
+        {
+            if (showOnOff && animationOff)
+            {
+                string name = animationOff.name.Split(' ')[0];
+                offTransitionParam = name + "Toggle";
+                onTransitionParam = name + "Toggle";
+                layerName = name;
+            }
+
+            if (showHueShifter && animation0)
+            {
+                string name = animation0.name.Split(' ')[0];
+                hueTransitionParam = name + "Param";
+                layerName = name;
+            }
+        }
+
+        if (automaticSearchingForOnAnim)
+        {
+            var path = AssetDatabase.GetAssetPath(animationOff);
+            path = path.Replace(".anim", "").TrimEnd('0') + 1 + ".anim";
+            var animOn = (Motion)AssetDatabase.LoadAssetAtPath(path, typeof(Motion));
+            if (animOn != null)
+                animationOn = animOn;
+        }
+
+        #endregion Automatic Stuff
 
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
@@ -74,6 +110,8 @@ public class AnimatorEditor : UnityEditor.EditorWindow
 
         layerName = EditorGUILayout.TextField("New Layer Name", layerName);
 
+        automaticNaming = EditorGUILayout.ToggleLeft("Automatic Naming", automaticNaming);
+
         EditorGUILayout.Space();
         Rect rect = EditorGUILayout.GetControlRect(false, 1);
         rect.height = 1;
@@ -85,6 +123,9 @@ public class AnimatorEditor : UnityEditor.EditorWindow
         showOnOff = EditorGUILayout.Foldout(showOnOff, "On-Off Toggle");
         if (showOnOff)
         {
+            automaticSearchingForOnAnim = EditorGUILayout.ToggleLeft("Automatic Searching for AnimationOn", automaticSearchingForOnAnim);
+            EditorGUILayout.Space();
+
             animationOff = (Motion)EditorGUILayout.ObjectField("Off Animation", animationOff, typeof(Motion), true);
             EditorGUILayout.Space();
 
@@ -173,6 +214,7 @@ public class AnimatorEditor : UnityEditor.EditorWindow
         #endregion HueShifter
 
         #region FlipAnimations
+
         showAnimationFlipper = EditorGUILayout.Foldout(showAnimationFlipper, "Animation Flipper");
         if (showAnimationFlipper)
         {
@@ -200,21 +242,8 @@ public class AnimatorEditor : UnityEditor.EditorWindow
                 FlipAnimations();
             }
         }
+
         #endregion FlipAnimations
-
-        #region FixStateMachine
-
-        stateMachineShifter = EditorGUILayout.Foldout(stateMachineShifter, "Fix Layer Machine State");
-        if (stateMachineShifter)
-        {
-            EditorGUILayout.Space();
-            if (GUILayout.Button("Fix Machine States"))
-            {
-                FixMachineStates();
-            }
-        }
-
-        #endregion
 
         EditorGUILayout.EndScrollView();
 
@@ -245,6 +274,11 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             //new Layer
             var layer = new AnimatorControllerLayer();
             layer.stateMachine = new AnimatorStateMachine();
+            layer.stateMachine.name = layerName;
+            layer.stateMachine.hideFlags = HideFlags.HideInHierarchy;
+
+            if (AssetDatabase.GetAssetPath(animatorController) != "")
+                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
 
             layer.name = layerName;
             layer.defaultWeight = 1;
@@ -289,6 +323,11 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             //new Layer
             var layer = new AnimatorControllerLayer();
             layer.stateMachine = new AnimatorStateMachine();
+            layer.stateMachine.name = layerName;
+            layer.stateMachine.hideFlags = HideFlags.HideInHierarchy;
+
+            if (AssetDatabase.GetAssetPath(animatorController) != "")
+                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
 
             layer.name = layerName;
             layer.defaultWeight = 1;
@@ -335,6 +374,11 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             //new Layer
             var layer = new AnimatorControllerLayer();
             layer.stateMachine = new AnimatorStateMachine();
+            layer.stateMachine.name = layerName;
+            layer.stateMachine.hideFlags = HideFlags.HideInHierarchy;
+
+            if (AssetDatabase.GetAssetPath(animatorController) != "")
+                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
 
             layer.name = layerName;
             layer.defaultWeight = 1;
@@ -354,64 +398,44 @@ public class AnimatorEditor : UnityEditor.EditorWindow
 
             animatorController.AddLayer(layer);
         }
-    }
 
-    private void FlipAnimations()
-    {
-        foreach (var anim in animationsToFlip)
+        void FlipAnimations()
         {
-            var path = AssetDatabase.GetAssetPath(anim);
-            var clip = new AnimationClip();
-
-            var settings = AnimationUtility.GetAnimationClipSettings(anim);
-            AnimationUtility.SetAnimationClipSettings(clip, settings);
-
-            var allCurves = AnimationUtility.GetAllCurves(anim);
-            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(anim);
-            foreach (var binding in bindings)
+            foreach (var anim in animationsToFlip)
             {
-                var animCurve = AnimationUtility.GetEditorCurve(anim, binding);
-                var newCurve = new AnimationCurve();
-                for (int i = 0; i < animCurve.length; i++)
-                {
-                    Keyframe curve = animCurve[i];
-                    if (curve.value == 0f)
-                        curve.value = 1f;
-                    else if (curve.value == 1f) // thank you @Skadihehe ;-;
-                        curve.value = 0f;
+                var path = AssetDatabase.GetAssetPath(anim);
+                var clip = new AnimationClip();
 
-                    newCurve.AddKey(curve);
+                var settings = AnimationUtility.GetAnimationClipSettings(anim);
+                AnimationUtility.SetAnimationClipSettings(clip, settings);
+
+                var allCurves = AnimationUtility.GetAllCurves(anim);
+                EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(anim);
+                foreach (var binding in bindings)
+                {
+                    var animCurve = AnimationUtility.GetEditorCurve(anim, binding);
+                    var newCurve = new AnimationCurve();
+                    for (int i = 0; i < animCurve.length; i++)
+                    {
+                        Keyframe curve = animCurve[i];
+                        if (curve.value == 0f)
+                            curve.value = 1f;
+                        else if (curve.value == 1f) // thank you @Skadihehe ;-;
+                            curve.value = 0f;
+
+                        newCurve.AddKey(curve);
+                    }
+
+                    AnimationUtility.SetEditorCurve(clip, binding, newCurve);
                 }
 
-                AnimationUtility.SetEditorCurve(clip, binding, newCurve);
+                var name = anim.name.EndsWith("0") ? anim.name.Substring(0, anim.name.Length - 1) + "1" : anim.name + "1";
+
+                AssetDatabase.CreateAsset(clip, path.Substring(0, path.LastIndexOf('/')) + "/" + name + ".anim");
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                clip.frameRate = anim.frameRate;
             }
-
-            var name = anim.name.EndsWith("0") ? anim.name.Substring(0, anim.name.Length - 1) + "1" : anim.name + "1";
-
-            AssetDatabase.CreateAsset(clip, path.Substring(0, path.LastIndexOf('/')) + "/" + name + ".anim");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            clip.frameRate = anim.frameRate;
         }
-
-    }
-
-    void FixMachineStates()
-    {
-        foreach (var layer in animatorController.layers)
-        {
-            layer.stateMachine = new AnimatorStateMachine();
-            layer.stateMachine.name = layer.name;
-            layer.stateMachine.hideFlags = HideFlags.HideInHierarchy;
-
-            var path = AssetDatabase.GetAssetPath(animatorController);
-
-            UnityEngine.Debug.Log("Path: " + path);
-
-            if (path != "")
-                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(animatorController));
-        }
-
-        UnityEngine.Debug.Log("Fixed oder so");
     }
 }
