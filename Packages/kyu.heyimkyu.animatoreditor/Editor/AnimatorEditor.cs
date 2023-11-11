@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using VRC.SDK3.Avatars.ScriptableObjects;
 
 public class AnimatorEditor : UnityEditor.EditorWindow
 {
@@ -15,17 +17,20 @@ public class AnimatorEditor : UnityEditor.EditorWindow
 
     public AnimatorController animatorController { get; set; }
     public GameObject gameobject { get; set; }
+
+    public VRCExpressionParameters expressionParameters { get; set; }
+
     public string layerName { get; set; }
 
     // ---- bool ----
-    public Motion animationOn { get; set; }
+    public bool showOnOff { get; set; }
 
+    public Motion animationOn { get; set; }
     public Motion animationOff { get; set; }
     public string onTransitionParam { get; set; }
     public string offTransitionParam { get; set; }
     public bool onTransitionBool { get; set; }
     public bool offTransitionBool { get; set; }
-    public bool showOnOff { get; set; }
 
     // ---- int ----
     public bool showIntSwitcher { get; set; }
@@ -49,7 +54,6 @@ public class AnimatorEditor : UnityEditor.EditorWindow
 
     // ---- automatic stuff ----
     public bool automaticNaming { get; set; } = true;
-
     public bool automaticSearchingForOnAnim { get; set; } = true;
 
     private static GUILayoutOption[] labelOptions = new GUILayoutOption[]
@@ -101,6 +105,8 @@ public class AnimatorEditor : UnityEditor.EditorWindow
         if (animatorController == null)
             gameobject = (GameObject)EditorGUILayout.ObjectField("GameObject", gameobject, typeof(GameObject), true);
         EditorGUILayout.EndHorizontal();
+
+        expressionParameters = (VRCExpressionParameters)EditorGUILayout.ObjectField("Expression Parameters", expressionParameters, typeof(VRCExpressionParameters), true);
 
         if (gameobject != null)
         {
@@ -271,6 +277,21 @@ public class AnimatorEditor : UnityEditor.EditorWindow
                     animatorController.AddParameter(offTransitionParam, AnimatorControllerParameterType.Bool);
             }
 
+            //param creation in expression params
+
+            if (expressionParameters != null)
+            {
+                if (expressionParameters.parameters.Any(x => x.name == onTransitionParam))
+                {
+                    AddParameterToExpressionParams(onTransitionParam, VRCExpressionParameters.ValueType.Bool, 0);
+                }
+
+                if (expressionParameters.parameters.Any(x => x.name == offTransitionParam))
+                {
+                    AddParameterToExpressionParams(offTransitionParam, VRCExpressionParameters.ValueType.Bool, 0);
+                }
+            }
+
             //new Layer
             var layer = new AnimatorControllerLayer();
             layer.stateMachine = new AnimatorStateMachine();
@@ -319,6 +340,15 @@ public class AnimatorEditor : UnityEditor.EditorWindow
 
             if (!paramExists)
                 animatorController.AddParameter(intTransitionParam, AnimatorControllerParameterType.Int);
+
+            //param creation in expression params
+            if (expressionParameters != null)
+            {
+                if (expressionParameters.parameters.Any(x => x.name == intTransitionParam))
+                {
+                    AddParameterToExpressionParams(intTransitionParam, VRCExpressionParameters.ValueType.Int, 0);
+                }
+            }
 
             //new Layer
             var layer = new AnimatorControllerLayer();
@@ -371,6 +401,15 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             if (!paramExists)
                 animatorController.AddParameter(hueTransitionParam, AnimatorControllerParameterType.Float);
 
+            //param creation in expression params
+            if (expressionParameters != null)
+            {
+                if (expressionParameters.parameters.Any(x => x.name == hueTransitionParam))
+                {
+                    AddParameterToExpressionParams(intTransitionParam, VRCExpressionParameters.ValueType.Float, 0);
+                }
+            }
+
             //new Layer
             var layer = new AnimatorControllerLayer();
             layer.stateMachine = new AnimatorStateMachine();
@@ -409,7 +448,6 @@ public class AnimatorEditor : UnityEditor.EditorWindow
                 var settings = AnimationUtility.GetAnimationClipSettings(anim);
                 AnimationUtility.SetAnimationClipSettings(clip, settings);
 
-                var allCurves = AnimationUtility.GetAllCurves(anim);
                 EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(anim);
                 foreach (var binding in bindings)
                 {
@@ -436,6 +474,15 @@ public class AnimatorEditor : UnityEditor.EditorWindow
                 AssetDatabase.Refresh();
                 clip.frameRate = anim.frameRate;
             }
+        }
+
+
+        void AddParameterToExpressionParams(string paramName, VRCExpressionParameters.ValueType valueType, float defaultValue)
+        {
+            VRCExpressionParameters.Parameter[] newParams = new VRCExpressionParameters.Parameter[expressionParameters.parameters.Length + 1];
+            expressionParameters.parameters.CopyTo(newParams, 0);
+            newParams[newParams.Length - 1] = new VRCExpressionParameters.Parameter() { name = paramName, valueType = valueType, networkSynced = true, defaultValue = defaultValue, saved = true };
+            expressionParameters.parameters = newParams;
         }
     }
 }
