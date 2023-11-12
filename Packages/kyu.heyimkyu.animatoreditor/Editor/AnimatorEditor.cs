@@ -281,12 +281,12 @@ public class AnimatorEditor : UnityEditor.EditorWindow
 
             if (expressionParameters != null)
             {
-                if (expressionParameters.parameters.Any(x => x.name == onTransitionParam))
+                if (!expressionParameters.parameters.Any(x => x.name == onTransitionParam))
                 {
                     AddParameterToExpressionParams(onTransitionParam, VRCExpressionParameters.ValueType.Bool, 0);
                 }
 
-                if (expressionParameters.parameters.Any(x => x.name == offTransitionParam))
+                if (!expressionParameters.parameters.Any(x => x.name == offTransitionParam))
                 {
                     AddParameterToExpressionParams(offTransitionParam, VRCExpressionParameters.ValueType.Bool, 0);
                 }
@@ -344,7 +344,7 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             //param creation in expression params
             if (expressionParameters != null)
             {
-                if (expressionParameters.parameters.Any(x => x.name == intTransitionParam))
+                if (!expressionParameters.parameters.Any(x => x.name == intTransitionParam))
                 {
                     AddParameterToExpressionParams(intTransitionParam, VRCExpressionParameters.ValueType.Int, 0);
                 }
@@ -404,7 +404,7 @@ public class AnimatorEditor : UnityEditor.EditorWindow
             //param creation in expression params
             if (expressionParameters != null)
             {
-                if (expressionParameters.parameters.Any(x => x.name == hueTransitionParam))
+                if (!expressionParameters.parameters.Any(x => x.name == hueTransitionParam))
                 {
                     AddParameterToExpressionParams(intTransitionParam, VRCExpressionParameters.ValueType.Float, 0);
                 }
